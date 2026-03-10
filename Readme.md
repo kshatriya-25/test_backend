@@ -641,3 +641,43 @@ This project demonstrates:
 ---
 
 **End of Guide**
+
+---
+
+# 25. Running with Docker (Backend only, bare-metal PostgreSQL)
+
+The Dockerfile starts from a plain `debian:bookworm-slim` Linux image and installs Python manually — exactly like you would on any Linux server.
+
+## Step 1 — Update `.env` for Docker
+
+Docker containers cannot use `localhost` to reach your host machine's PostgreSQL. Change the host to `host.docker.internal`:
+
+```env
+DATABASE_URL=postgresql://postgres:ram@host.docker.internal:5432/taskmanager
+```
+
+## Step 2 — Build the image
+
+```bash
+docker build -t taskmanager-backend .
+```
+
+## Step 3 — Run the container
+
+```bash
+docker run -d --name taskmanager-backend -p 8000:8000 --env-file .env taskmanager-backend
+```
+
+API docs: `http://localhost:8000/docs`
+
+---
+
+## Other useful commands
+
+```bash
+docker logs -f taskmanager-backend      # see live logs
+
+docker stop taskmanager-backend         # stop the container
+
+docker rm taskmanager-backend           # delete the container
+```
