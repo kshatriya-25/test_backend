@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 from app.database import get_db
-from app.models import Task
+from app.models import Task, User
 from app.schemas import TaskCreate, TaskResponse
 from app.auth import get_current_user
 
@@ -10,6 +10,8 @@ router = APIRouter()
 
 @router.post("/", response_model=TaskResponse, status_code=status.HTTP_201_CREATED)
 def create_task(task: TaskCreate, db: Session = Depends(get_db), current_user: dict = Depends(get_current_user)):
+    if not db.query(User).filter(User.id == task.assigned_to).first():
+        raise HTTPException(status_code=400, detail=f"User with id {task.assigned_to} does not exist")
     new_task = Task(
         title=task.title,
         assigned_to=task.assigned_to,
