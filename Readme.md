@@ -433,6 +433,20 @@ async def login(user: OAuth2PasswordRequestForm = Depends(), db: Session = Depen
         raise HTTPException(status_code=401, detail="Invalid credentials")
     token = create_access_token({"sub": str(db_user.id), "role": db_user.role})
     return {"access_token": token, "token_type": "bearer"}
+
+
+@router.get("/")
+async def get_users(db: Session = Depends(get_db), current_user: dict = Depends(get_current_user)):
+    users = db.query(User).all()
+    return [{"id": u.id, "username": u.username, "role": u.role} for u in users]
+
+
+@router.get("/{user_id}")
+async def get_user(user_id: int, db: Session = Depends(get_db), current_user: dict = Depends(get_current_user)):
+    user = db.query(User).filter(User.id == user_id).first()
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    return {"id": user.id, "username": user.username, "role": user.role}
 ```
 
 ---
@@ -562,6 +576,43 @@ Example response:
   "token_type": "bearer"
 }
 ```
+
+---
+
+## Get All Users
+
+```
+GET /users/
+```
+
+Requires JWT token in Authorization header.
+
+Example response:
+
+```json
+[
+  { "id": 1, "username": "ankit", "role": "admin" },
+  { "id": 2, "username": "john", "role": "user" }
+]
+```
+
+---
+
+## Get User by ID
+
+```
+GET /users/{user_id}
+```
+
+Requires JWT token in Authorization header.
+
+Example response:
+
+```json
+{ "id": 1, "username": "ankit", "role": "admin" }
+```
+
+Returns `404` if user not found.
 
 ---
 
